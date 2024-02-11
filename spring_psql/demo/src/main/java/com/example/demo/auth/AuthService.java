@@ -1,7 +1,7 @@
 package com.example.demo.auth;
 
 
-import com.example.demo.config.JwtService;
+import com.example.demo.config.JWTGenerator;
 //import com.example.demo.model.JdbcRepository;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
@@ -10,8 +10,11 @@ import com.example.demo.token.Token;
 import com.example.demo.token.TokenRepository;
 import com.example.demo.token.TokenType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +25,11 @@ import java.sql.Timestamp;
 public class AuthService {
 
     private final UserRepository userRepository;
-
     private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final JWTGenerator jwtGenerator;
     private final AuthenticationManager authenticationManager;
-    public AuthenticationResponse register(RegisterRequest request) {
+    public String register(RegisterRequest request) {
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -35,25 +37,21 @@ public class AuthService {
                 .created_at(new Timestamp(System.currentTimeMillis()))
                 .build();
         var usrTmp = userRepository.save(user);
-        var jwtToken = jwtService.generateJwtToken(user);
-        saveUserToken(usrTmp, jwtToken);
 
-        return AuthenticationResponse.builder()
-                .jwtToken(jwtToken)
-                .build();
+        return "User registered";
     }
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(
+        Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                     request.getUsername(), request.getPassword()
                 )
         );
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow();////// !!!!!!!!!!!!!!!!!!!!!!!!!!!
-        var jwtToken = jwtService.generateJwtToken(user);
-        revokeAllUserTokens(user);
-        saveUserToken(user, jwtToken);
+//        User user = userRepository.findByUsername(request.getUsername())
+//                .orElseThrow();////// !!!!!!!!!!!!!!!!!!!!!!!!!!!
+        var jwtToken = jwtGenerator.generateToken(authentication);
+        //revokeAllUserTokens(user);
+        //saveUserToken(user, jwtToken);
         return AuthenticationResponse.builder()
                 .jwtToken(jwtToken)
                 .build();

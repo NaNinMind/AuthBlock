@@ -2,10 +2,7 @@ package com.example.demo.model;
 
 import com.example.demo.token.Token;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,10 +17,15 @@ import java.util.List;
 @Entity
 @Table(name = "_user")
 public class User implements UserDetails {
+    @Getter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
+
+    @Getter
     private String username;
+
+    @Getter
     private String password;
 
     private java.sql.Timestamp created_at;
@@ -33,16 +35,6 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user")
     private List<Token> tokens;
-
-    public int getId() {
-        return id;
-    }
-    public String getUsername() {
-        return username;
-    }
-    public String getPassword() {
-        return password;
-    }
 
     public void setId(int id) {
         this.id = id;
